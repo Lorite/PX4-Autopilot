@@ -1,0 +1,101 @@
+#!/bin/sh
+#
+# @name Gazebo x500 Indoor
+#
+# @type Quadrotor
+#
+# Indoor flight configuration for x500 quadrotor
+# Uses barometer + range sensor for altitude, no GPS
+# Suitable for visual odometry and confined space operations
+
+. ${R}etc/init.d/rc.mc_defaults
+
+PX4_SIMULATOR=${PX4_SIMULATOR:=gz}
+PX4_GZ_WORLD=${PX4_GZ_WORLD:=default}
+PX4_SIM_MODEL=${PX4_SIM_MODEL:=x500_indoor}
+
+param set-default SIM_GZ_EN 1
+
+# Airframe configuration (Quadrotor X, 4 rotors)
+param set-default CA_AIRFRAME 0
+param set-default CA_ROTOR_COUNT 4
+
+# Rotor positions (aligned with x500_indoor SDF)
+param set-default CA_ROTOR0_PX 0.13
+param set-default CA_ROTOR0_PY 0.22
+param set-default CA_ROTOR0_KM  0.05
+
+param set-default CA_ROTOR1_PX -0.13
+param set-default CA_ROTOR1_PY -0.20
+param set-default CA_ROTOR1_KM  0.05
+
+param set-default CA_ROTOR2_PX 0.13
+param set-default CA_ROTOR2_PY -0.22
+param set-default CA_ROTOR2_KM -0.05
+
+param set-default CA_ROTOR3_PX -0.13
+param set-default CA_ROTOR3_PY 0.20
+param set-default CA_ROTOR3_KM -0.05
+
+# ESC/Motor configuration
+param set-default SIM_GZ_EC_FUNC1 101
+param set-default SIM_GZ_EC_FUNC2 102
+param set-default SIM_GZ_EC_FUNC3 103
+param set-default SIM_GZ_EC_FUNC4 104
+
+param set-default SIM_GZ_EC_MIN1 150
+param set-default SIM_GZ_EC_MIN2 150
+param set-default SIM_GZ_EC_MIN3 150
+param set-default SIM_GZ_EC_MIN4 150
+
+param set-default SIM_GZ_EC_MAX1 1000
+param set-default SIM_GZ_EC_MAX2 1000
+param set-default SIM_GZ_EC_MAX3 1000
+param set-default SIM_GZ_EC_MAX4 1000
+
+# Flight controller defaults
+param set-default MPC_THR_HOVER 0.60
+param set-default NAV_DLL_ACT 2
+
+# ===== Indoor Navigation Configuration =====
+# INDOOR FLIGHT: GPS disabled, using barometer + range sensor for height estimation
+# External vision (if available) for position estimation
+
+# EKF2 - Height Reference: Use range sensor as primary for indoor
+param set-default EKF2_HGT_REF 2
+
+# EKF2 - Disable GPS (critical for indoor)
+param set-default SYS_HAS_GPS 0
+param set-default SIM_GPS_USED 0
+param set-default EKF2_GPS_CTRL 0
+
+# EKF2 - Enable barometer for altitude
+param set-default EKF2_BARO_CTRL 1
+
+# EKF2 - Range sensor configuration (downward lidar)
+param set-default EKF2_RNG_CTRL 2
+
+# EKF2 - External vision/VIO support (ENABLED for Gazebo ground truth)
+# Bit 0 (1): Horizontal position
+# Bit 1 (2): Vertical position
+# Bit 2 (4): Velocity
+# Bit 3 (8): Yaw
+# 15 = all enabled (1+2+4+8)
+param set-default EKF2_EV_CTRL 15
+param set-default EKF2_EVP_NOISE 0.1
+param set-default EKF2_EVV_NOISE 0.1
+
+# EKF2 - Optical flow (disabled by default)
+param set-default EKF2_OF_CTRL 0
+
+# COM_POS_FS_EPH: Position failsafe threshold (removed - not needed with EV enabled)
+# With EKF2_EV_CTRL=15, EKF2 will have valid position estimates from vision
+
+# Motor/Thrust tuning for indoor
+param set-default MPC_ACC_HOR_MAX 8.0
+param set-default MPC_ACC_UP_MAX 4.0
+param set-default MPC_ACC_DOWN_MAX 2.0
+
+# Takeoff/Landing speeds
+param set-default MPC_TKO_SPEED 1.5
+param set-default MPC_LAND_SPEED 0.5
